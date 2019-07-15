@@ -2,6 +2,7 @@ package backend
 
 import (
 	"context"
+	"log"
 	"strconv"
 	"time"
 
@@ -21,6 +22,7 @@ type Backend struct {
 var _ web.BackendServer = (*Backend)(nil)
 
 func (b Backend) GetUser(ctx context.Context, req *web.GetUserRequest) (*web.User, error) {
+	log.Printf("req %+v", req)
 	if req.GetUserId() != "1234" {
 		st := status.New(codes.NotFound, "invalid id")
 		detSt, err := st.WithDetails(&errdetails.BadRequest{
@@ -42,6 +44,7 @@ func (b Backend) GetUser(ctx context.Context, req *web.GetUserRequest) (*web.Use
 }
 
 func (b Backend) GetUsers(req *web.GetUsersRequest, srv web.Backend_GetUsersServer) error {
+	log.Printf("req %+v", req)
 	for index := 0; index < int(req.GetNumUsers()); index++ {
 		err := srv.Send(&web.User{
 			Id: strconv.Itoa(index),

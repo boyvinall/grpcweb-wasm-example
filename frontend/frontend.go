@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"io"
-	"io/ioutil"
-	"syscall/js"
 
 	_ "google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
@@ -14,36 +12,8 @@ import (
 	web "github.com/johanbrandhorst/grpcweb-wasm-example/proto"
 )
 
-// Build with Go WASM fork
-//go:generate rm -f ./html/*
-//go:generate bash -c "GOOS=js GOARCH=wasm go build -o ./html/test.wasm frontend.go"
-
-//go:generate bash -c "cp $DOLLAR(go env GOROOT)/misc/wasm/wasm_exec.html ./html/index.html"
-//go:generate bash -c "cp $DOLLAR(go env GOROOT)/misc/wasm/wasm_exec.js ./html/wasm_exec.js"
-//go:generate bash -c "sed -i -e 's;</button>;</button>\\n\\t<div id=\"target\"></div>;' ./html/index.html"
-
-// Integrate generated JS into a Go file for static loading.
-//go:generate bash -c "go run assets_generate.go"
-
-var document js.Value
-
-type DivWriter js.Value
-
-func (d DivWriter) Write(p []byte) (n int, err error) {
-	node := document.Call("createElement", "div")
-	node.Set("innerHTML", string(p))
-	js.Value(d).Call("appendChild", node)
-	return len(p), nil
-}
-
-func init() {
-	document = js.Global().Get("document")
-	div := document.Call("getElementById", "target")
-	grpclog.SetLoggerV2(grpclog.NewLoggerV2(DivWriter(div), ioutil.Discard, ioutil.Discard))
-}
-
 func main() {
-	cc, err := grpc.Dial("")
+	cc, err := grpc.Dial(endpoint, opts...)
 	if err != nil {
 		grpclog.Println(err)
 		return
